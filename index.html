@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<link rel="icon" href="favicon.png" type="image/png">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>LSPD Academy Application</title>
+
+<style>
+* { box-sizing: border-box; }
+
+:root {
+    --viewer: #525659;
+    --toolbar: #323639;
+    --page: #ffffff;
+    --ink: #000000;
+    --text: #111111;
+    --muted: #555555;
+    --line: #000000;
+    --light: #bdbdbd;
+    --err: #000000;
+
+    --font: Arial, "Liberation Sans", Helvetica, sans-serif;
+    --typed: "Courier New", "Liberation Mono", Courier, monospace;
+}
+
+body {
+    margin: 0;
+    background: var(--viewer);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.app { min-height: 100vh; }
+
+/* ===== TOOLBAR (как в просмотрщике PDF) ===== */
+.sidebar {
+    position: sticky; top: 0; z-index: 20;
+    background: var(--toolbar);
+    color: #e8e8e8;
+    padding: 0 20px;
+    display: flex; align-items: center; gap: 24px;
+    min-height: 44px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.5);
+}
+.logo { padding: 0; margin: 0; border: 0; display: flex; align-items: baseline; gap: 10px; }
+.logo-title { font-size: 13px; font-weight: 700; letter-spacing: .12em; }
+.logo-subtitle { margin: 0; color: #a8a8a8; font-size: 11px; letter-spacing: .08em; }
+
+.steps { display: flex; flex-direction: row; gap: 2px; margin-left: auto; }
+.step {
+    border: 0; background: transparent; color: #b5b5b5;
+    padding: 6px 12px; border-radius: 2px;
+    display: flex; align-items: center; gap: 6px;
+    cursor: pointer; font: inherit; font-size: 12px;
+}
+.step:hover { background: #4a4e51; color: #fff; }
+.step.active { background: #5f6368; color: #fff; }
+.step.completed { color: #e0e0e0; }
+.step.completed .step-number::after { content: " ✓"; }
+.step-number { font-weight: 700; font-size: 12px; }
+.step-title { font-size: 12px; }
+
+.sidebar-bottom { display: flex; align-items: center; gap: 8px; margin: 0; padding: 0; border: 0; }
+.progress-mini { width: 90px; height: 3px; background: #5a5d60; border-radius: 0; overflow: hidden; }
+.progress-mini div { width: 0; height: 100%; background: #fff; transition: width .2s; }
+.progress-info { margin: 0; color: #b5b5b5; font-size: 11px; }
+.progress-info span:first-child { display: none; }
+
+/* ===== PAGE (лист А4) ===== */
+.main { width: 100%; margin: 0; min-height: 0; padding: 28px 16px 60px; }
+.container {
+    max-width: 794px;
+    margin: 0 auto;
+    background: var(--page);
+    padding: 44px 52px 36px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.55);
+}
+
+.topbar {
+    display: block;
+    text-align: center;
+    margin: 0 0 22px; padding: 0 0 14px;
+    border-bottom: 2px solid var(--ink);
+    position: relative;
+}
+.topbar h1 {
+    margin: 0;
+    font-size: 19px; font-weight: 700;
+    letter-spacing: .06em; text-transform: uppercase;
+}
+.topbar p { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+.status {
+    position: absolute; right: 0; top: 0;
+    padding: 0; border: 0; background: none; border-radius: 0;
+    color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .12em;
+}
+
+/* ===== SECTIONS ===== */
+.section-card { background: none; border: 0; border-radius: 0; box-shadow: none; overflow: visible; }
+
+.section-header {
+    display: flex; align-items: baseline; gap: 12px;
+    padding: 6px 10px; margin: 0 0 16px;
+    background: var(--ink); border: 0;
+}
+.section-header small {
+    color: #cfcfcf; font-size: 10px; font-weight: 700;
+    letter-spacing: .1em; text-transform: uppercase; white-space: nowrap;
+}
+.section-header h2 {
+    margin: 0; color: #fff;
+    font-size: 13px; font-weight: 700;
+    letter-spacing: .04em; text-transform: uppercase;
+}
+.section-header p { display: none; }
+
+.section-body { padding: 0; }
+.section-body h3 {
+    margin: 28px 0 14px; padding: 4px 0;
+    border-bottom: 1px solid var(--ink);
+    font-size: 12px; font-weight: 700;
+    letter-spacing: .06em; text-transform: uppercase;
+}
+
+/* ===== FIELDS (подчёркнутые строки) ===== */
+.form-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px 28px; }
+.full { grid-column: 1 / -1; }
+
+.field label {
+    display: block; margin: 0 0 1px;
+    color: var(--muted); font-size: 10.5px; font-weight: 700;
+    letter-spacing: .03em; text-transform: uppercase;
+}
+.field input, .field textarea, .field select {
+    width: 100%; padding: 4px 2px 3px;
+    background: transparent;
+    border: 0; border-bottom: 1px solid var(--line); border-radius: 0;
+    outline: none; color: var(--ink);
+    font-family: var(--typed); font-size: 14px; font-weight: 700;
+    transition: background .1s;
+}
+.field input::placeholder, .field textarea::placeholder {
+    color: #b0b0b0; font-weight: 400;
+}
+.field input:focus, .field textarea:focus, .field select:focus {
+    background: #f1f1f1;
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 2px;
+}
+.field textarea {
+    min-height: 90px; resize: vertical;
+    border: 1px solid var(--line); padding: 6px 8px;
+    line-height: 1.5;
+}
+.field textarea:focus { padding: 5px 7px; border: 2px solid var(--ink); }
+.field-stack { margin-top: 16px; }
+
+.field.error label { color: var(--err); text-decoration: underline; }
+.field.error input, .field.error textarea, .field.error select {
+    background: #e9e9e9; border-bottom: 2px dashed var(--ink);
+}
+.field.error textarea { border: 2px dashed var(--ink); }
+.field-error {
+    display: none; margin-top: 3px;
+    color: var(--ink); font-size: 11px; font-weight: 700;
+}
+.field.error .field-error { display: block; }
+.field-error::before { content: "▲ "; }
+
+/* ===== QUESTIONS (чекбоксы) ===== */
+.question {
+    display: flex; align-items: center; justify-content: space-between; gap: 20px;
+    padding: 9px 0; border-bottom: 1px solid var(--light);
+}
+.question:first-child { padding-top: 0; }
+.question:last-child { border-bottom: 0; }
+.question-text { flex: 1; color: var(--text); font-size: 13px; font-weight: 400; line-height: 1.4; }
+
+.answers { display: flex; gap: 18px; margin: 0; flex-shrink: 0; }
+.answer { display: flex; align-items: center; cursor: pointer; }
+.answer input { display: none; }
+.answer span {
+    display: flex; align-items: center; gap: 7px;
+    padding: 0; background: none; border: 0; border-radius: 0;
+    color: var(--text); font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.answer span::before {
+    content: "";
+    width: 15px; height: 15px; flex-shrink: 0;
+    border: 1.5px solid var(--ink); background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; line-height: 1; font-weight: 700;
+}
+.answer input:checked + span { background: none; border: 0; color: var(--ink); }
+.answer input:checked + span::before {
+    content: "✕";
+}
+
+.notice {
+    margin: 18px 0 0; padding: 8px 12px;
+    background: none; border: 1px solid var(--ink); border-radius: 0;
+    color: var(--text); font-size: 12px; line-height: 1.5;
+}
+
+/* ===== BBCODE ===== */
+.bbcode {
+    width: 100%; min-height: 560px; padding: 10px;
+    background: #fff; border: 1px solid var(--ink); border-radius: 0;
+    color: var(--ink);
+    font-family: var(--typed); font-size: 12px; line-height: 1.5; font-weight: 400;
+    resize: vertical; outline: none;
+}
+.title-row { display: flex; gap: 8px; margin-bottom: 14px; }
+.title-row input {
+    flex: 1; padding: 8px 10px;
+    background: #fff; border: 1px solid var(--ink); border-radius: 0;
+    outline: none; color: var(--ink);
+    font-family: var(--typed); font-size: 13px; font-weight: 700;
+}
+.label-sm {
+    display: block; margin: 0 0 4px;
+    color: var(--muted); font-size: 10.5px; font-weight: 700;
+    letter-spacing: .03em; text-transform: uppercase;
+}
+
+.publish-guide {
+    margin-top: 20px; padding: 10px 14px;
+    background: none; border: 1px solid var(--ink); border-radius: 0;
+    color: var(--text); font-size: 12px; line-height: 1.6;
+}
+.publish-guide b { text-transform: uppercase; letter-spacing: .05em; }
+.publish-guide ol { margin: 8px 0 0; padding-left: 18px; }
+.publish-guide li { margin-bottom: 4px; }
+
+/* ===== BUTTONS ===== */
+.navigation {
+    display: flex; justify-content: space-between;
+    margin-top: 30px; padding-top: 14px;
+    border-top: 1px solid var(--ink);
+}
+.nav-right, .nav-left { display: flex; gap: 8px; }
+.btn {
+    padding: 8px 16px; border-radius: 0;
+    border: 1px solid var(--ink); background: #fff; color: var(--ink);
+    font-family: var(--font); font-size: 12px; font-weight: 700;
+    letter-spacing: .06em; text-transform: uppercase; cursor: pointer;
+}
+.btn:hover { background: #e4e4e4; }
+.btn.primary { background: var(--ink); color: #fff; }
+.btn.primary:hover { background: #333; }
+.btn.danger { border-color: var(--light); color: var(--muted); }
+.btn.danger:hover { border-color: var(--ink); color: var(--ink); background: #fff; }
+
+/* ===== TOAST ===== */
+.toast {
+    position: fixed; right: 20px; bottom: 20px;
+    padding: 10px 16px; border-radius: 0;
+    background: #000; color: #fff; border: 0;
+    font-size: 12px; font-weight: 700;
+    opacity: 0; transform: translateY(10px); pointer-events: none;
+    transition: opacity .15s, transform .15s; z-index: 100;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+
+[hidden] { display: none !important; }
+
+/* ===== MOBILE ===== */
+@media (max-width: 850px) {
+    .sidebar { flex-wrap: wrap; gap: 6px 12px; padding: 8px 12px; }
+    .steps { margin-left: 0; width: 100%; overflow-x: auto; order: 3; }
+    .step { flex-shrink: 0; padding: 6px 10px; }
+    .step-title { display: none; }
+    .sidebar-bottom { margin-left: auto; }
+    .main { padding: 12px 8px 40px; }
+    .container { padding: 24px 18px 24px; }
+    .status { display: none; }
+    .form-grid { grid-template-columns: 1fr; gap: 14px; }
+    .full { grid-column: auto; }
+    .question { flex-direction: column; align-items: flex-start; gap: 8px; }
+}
+@media (max-width: 500px) {
+    .logo-subtitle { display: none; }
+    .navigation { flex-direction: column-reverse; gap: 10px; }
+    .nav-left, .nav-right { width: 100%; }
+    .nav-left .btn, .nav-right .btn { flex: 1; }
+    .title-row { flex-direction: column; }
+    .section-header { flex-direction: column; gap: 2px; }
+}
+
+/* ===== ДОКУМЕНТ: белая страница, без панелей ===== */
+body { background: #fff; }
+.sidebar { display: none; }
+.main { padding: 36px 20px 70px; }
+.container { max-width: 780px; padding: 0; box-shadow: none; background: none; }
+
+.topbar { margin-bottom: 26px; padding-bottom: 12px; border-bottom: 2px solid #000; }
+.topbar .doc-logo { display: block; width: 96px; height: auto; margin: 0 auto 12px; }
+.topbar h1 { font-size: 20px; letter-spacing: .07em; }
+.topbar p { margin-top: 5px; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
+.status { display: none; }
+
+@media (max-width: 850px) {
+    .main { padding: 20px 14px 50px; }
+}
+
+/* ===== масштаб крупнее ===== */
+.container { zoom: 1.2; }
+
+@media (max-width: 1100px) { .container { zoom: 1.1; } }
+@media (max-width: 850px)  { .container { zoom: 1; } }
+
+.main { padding-top: 20px; padding-bottom: 30px; }
+
+
+/* ===== чекбоксы-галочки как в бланке ===== */
+.answer span::before {
+    width: 16px; height: 16px;
+    border: 0; border-radius: 3px;
+    background: #d3d8dd; color: #fff;
+    font-size: 12px; font-weight: 700;
+}
+.answer input:checked + span::before { content: "\2713"; background: #2f8fdd; }
+
+.accept {
+    display: flex; align-items: center; gap: 10px;
+    margin-top: 18px; padding: 8px 12px;
+    background: none; border: 1px solid #000; border-radius: 0;
+    cursor: pointer;
+}
+.accept.error { border: 2px dashed #000; background: #ececec; }
+.accept input {
+    -webkit-appearance: none; appearance: none;
+    width: 16px; height: 16px; margin: 0; flex-shrink: 0;
+    border-radius: 3px; background: #d3d8dd;
+    display: grid; place-content: center; cursor: pointer;
+}
+.accept input:checked { background: #2f8fdd; }
+.accept input:checked::after { content: "\2713"; color: #fff; font-size: 12px; font-weight: 700; line-height: 1; }
+.accept span { font-size: 13px; color: #111; }
+.field{margin:0 0 14px}.txt{white-space:pre-line;font-size:12px;line-height:1.5;margin:0 0 14px}
+.opts{display:flex;flex-wrap:wrap;gap:6px 22px;margin-top:4px}
+.field .opts label{display:flex;margin:0;font-size:13px;text-transform:none;letter-spacing:0;color:var(--text)}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<!-- SIDEBAR -->
+
+<aside class="sidebar">
+
+    <div class="logo">
+        <div class="logo-title">
+            LOS SANTOS POLICE DEPARTMENT
+        </div>
+
+        <div class="logo-subtitle">
+            APPLICATION BUILDER
+        </div>
+    </div>
+
+    <div class="steps">
+
+        <button class="step active" data-step="1">
+            <span class="step-number">01</span>
+            <span class="step-title">Персональные данные</span>
+        </button>
+
+        <button class="step" data-step="2">
+            <span class="step-number">02</span>
+            <span class="step-title">Уголовные вопросы</span>
+        </button>
+
+        <button class="step" data-step="3">
+            <span class="step-number">03</span>
+            <span class="step-title">Лицензии</span>
+        </button>
+
+        <button class="step" data-step="4">
+            <span class="step-number">04</span>
+            <span class="step-title">Декларация</span>
+        </button>
+
+        <button class="step" data-step="5">
+            <span class="step-number">05</span>
+            <span class="step-title">OOC информация</span>
+        </button>
+
+        <button class="step" data-step="6">
+            <span class="step-number">06</span>
+            <span class="step-title">Персонаж</span>
+        </button>
+
+        <button class="step" data-step="7">
+            <span class="step-number">07</span>
+            <span class="step-title">Готовый BBCode</span>
+        </button>
+
+    </div>
+
+    <div class="sidebar-bottom">
+
+        <div class="progress-mini">
+            <div id="progress"></div>
+        </div>
+
+        <div class="progress-info">
+            <span>Заполнение</span>
+            <span id="progressText">0%</span>
+        </div>
+
+    </div>
+
+</aside>
+
+
+<!-- MAIN -->
+
+<main class="main">
+
+<div class="container">
+
+<div class="topbar">
+    <img class="doc-logo" src="https://i.imgur.com/tJxXQFt.png" alt="">
+    <div>
+        <h1 id="pageTitle">Los Santos Police Department</h1>
+
+        <p id="pageDescription">Preliminary Background Application</p>
+    </div>
+
+    <div class="status">
+        LSPD APPLICATION
+    </div>
+
+</div>
+
+
+<div id="pages"></div>
+
+<!-- STEP 7 -->
+
+<section class="step-page"
+         data-page="11"
+         hidden>
+
+<div class="section-card">
+
+<div class="section-header">
+
+    <small>Раздел 07</small>
+
+    <h2>Готовый XenForo BBCode</h2>
+
+    <p>
+        Готовый код для публикации на форуме.
+    </p>
+
+</div>
+
+<div class="section-body">
+
+<label style="display:block; margin-bottom:7px; color:#555; font-size:12px; font-weight:700;">
+    Заголовок темы
+</label>
+
+<div class="title-row">
+
+    <input
+        id="topicTitle"
+        readonly>
+
+    <button class="btn primary"
+            onclick="copyTopicTitle()">
+
+        Копировать заголовок
+
+    </button>
+
+</div>
+
+<textarea
+    id="bbcode"
+    class="bbcode"
+    readonly></textarea>
+
+<br><br>
+
+<button class="btn primary"
+        onclick="copyBBCode()">
+
+    Копировать BBCode
+
+</button>
+
+<div class="publish-guide">
+
+    <b>Как опубликовать заявку:</b>
+
+    <ol>
+        <li>Проверьте заголовок темы выше и при необходимости поправьте его по требованиям форума.</li>
+        <li>Скопируйте заголовок темы кнопкой «Копировать заголовок».</li>
+        <li>Скопируйте текст BBCode кнопкой «Копировать BBCode».</li>
+        <li>Создайте новую тему в разделе академии на форуме.</li>
+        <li>Вставьте скопированный заголовок в поле названия темы, а скопированный BBCode — в тело сообщения.</li>
+    </ol>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+
+<!-- NAVIGATION -->
+
+<div class="navigation">
+
+<div class="nav-left">
+
+<button class="btn danger"
+        onclick="resetForm()">
+
+    Очистить
+
+</button>
+
+</div>
+
+
+<div class="nav-right">
+
+<button class="btn"
+        id="backBtn"
+        onclick="previousStep()">
+
+    ← Назад
+
+</button>
+
+
+<button class="btn primary"
+        id="nextBtn"
+        onclick="nextStep()">
+
+    Далее →
+
+</button>
+
+</div>
+
+</div>
+
+
+</div>
+
+</main>
+
+</div>
+
+
+<div class="toast"
+     id="toast"></div>
+
+
+<script>
+const O=s=>s.split("|"),YN="Да|Нет",GD="Мужской|Женский|Другой",ND="Н/Д";
+const S=[
+{h:"1. ПЕРСОНАЛЬНАЯ ИНФОРМАЦИЯ",i:[
+["t","1.1","Фамилия"],["t","1.2","Имя"],["t","1.3","Отчество / второе имя",ND],["t","1.4","Номер телефона"],
+["t","1.5","Дата рождения","","10/ИЮН/2001"],["r","1.6","Пол:",O(GD)],["t","1.7","Адрес"],
+["t","1.8","Город","Los Santos"],["t","1.9","Штат","San Andreas"],
+["r","1.10","Гражданство / резидентство:",O("Я гражданин США|Я постоянный резидент (иностранец) и подал(-а) заявление на гражданство США|Ничего из перечисленного")],
+["r","1.11","Этническая группа / раса (отметьте только один вариант)",O("Чернокожий|Латиноамериканец|Азиат / Тихоокеанский островитянин|Европеоид|Индеец|Филиппинец|Выходец с Ближнего Востока")],
+["t","1.12","Рост (фут/дюйм)","","6'1"],["t","1.13","Вес (фунты)","","194 lbs"],
+["i","1.14","Предоставьте фотографию на паспорт. На фото должны быть видны лицо анфас и плечи. На фото не должно быть головных уборов, очков и любых предметов, закрывающих лицо. Прикрепите фото в правой верхней части этого раздела.","","Ссылка на фото (необязательно)"]]},
+{h:"2. ОБРАЗОВАНИЕ",i:[
+["r","2.1","Какой у вас наивысший уровень образования? (отметьте только один вариант)",O("Неоконченное высшее|Степень ассоциата|Степень бакалавра|Магистратура / аспирантура|Среднее образование и/или GED|Ни одно из утверждений об образовании ко мне не относится")],
+["r","2.2.1","Если вы учились в колледже, какая у вас была основная специальность?",O("Уголовное правосудие|Бизнес / Экономика|Общее образование / Не определился|Инженерия / Информатика|Коммуникации|Психология / Социология|Гуманитарные науки|Педагогика|Естественные науки|Другое")],
+["h","2.2.2","Если «Другое», укажите вашу специальность."],["t","","Предмет",ND],
+["r","2.3","Если вы служили в армии, укажите род войск. (отметьте только один вариант)",O("Армия|Военно-морской флот|Военно-воздушные силы|Морская пехота|Береговая охрана")],
+["r","2.4","Можете ли вы эффективно и свободно общаться на английском языке?",O(YN)],
+["c","2.5.1","Какими языками, помимо английского, вы свободно владеете?",O("Испанский|Хинди|Арабский|Португальский|Бенгальский|Русский|Китайский|Тагальский|Японский|Голландский|Панджаби/Лахнда|Сербский|Вьетнамский|Армянский|Корейский|Персидский|Другой")],
+["h","2.5.2","Если «Другой», какими языками, помимо английского, вы свободно владеете?"],
+["t","","Язык 1",ND],["t","","Язык 2",ND]]},
+{h:"3. ОПЫТ РАБОТЫ И ТРУДОУСТРОЙСТВО",i:[
+["p","","Опыт работы и трудоустройство включает организации и учреждения, в которых вы работали на добровольной или оплачиваемой основе. Их необходимо указывать отдельно, при необходимости добавляя дополнительные поля;"],
+["h","3.1","Предыдущее место работы:"],["t","3.1.1","Название компании"],["t","3.1.2","Характер работы"],["a","3.1.3","Причина увольнения"],
+["t","3.1.4","Работодатель (если применимо)",ND],["t","3.1.5","Звание (если применимо)",ND],["t","3.1.6","Должность (если применимо)"],["t","3.1.7","Срок работы","","19/07/2026 - 13/08/2026"],
+["h","3.2","Предыдущее место работы:"],["t","3.2.1","Название компании",ND],["t","3.2.2","Характер работы",ND],["t","3.2.3","Причина увольнения",ND],
+["t","3.2.4","Работодатель (если применимо)",ND],["t","3.2.5","Звание (если применимо)",ND],["t","3.2.6","Должность (если применимо)",ND],["t","3.2.7","Срок работы",ND]]},
+{h:"4. МЕДИЦИНСКАЯ ИСТОРИЯ",i:[
+["r","4.1.1","Есть ли у вас диагностированное физическое или психическое заболевание?",O(YN)],
+["t","4.1.2","Если да: описание заболевания",ND]]},
+{h:"5. ЛИЦЕНЗИИ И РАЗРЕШЕНИЯ",i:[
+["r","5.1.1","Есть ли у вас действующие водительские права Сан-Андреас?",O(YN)],
+["r","5.1.2","Приостанавливалось ли действие ваших водительских прав?",O(YN)],
+["r","5.1.3","Лишались ли вы когда-либо водительских прав?",O(YN)],
+["r","5.2.1","Есть ли у вас лицензия на управление воздушными судами?",O(YN)],
+["r","5.2.2","Лишались ли вы когда-либо лицензии на управление воздушными судами?",O(YN)],
+["r","5.3.1","Есть ли у вас лицензия на огнестрельное оружие?",O(YN)],
+["c","5.3.2","Укажите все действующие оружейные лицензии, которые у вас есть.",O("Лицензия на личное огнестрельное оружие (PF)|Лицензия на скрытое ношение (CCW)|Лицензия охранника (GuardCard)")],
+["r","5.3.3","Приостанавливалось или аннулировалось ли когда-либо действие вашей оружейной лицензии?",O(YN)]]},
+{h:"6. ПРОВЕРКА БИОГРАФИИ",i:[
+["p","","Полицейское управление Лос-Сантоса проводит тщательную проверку на наличие судимостей у всех своих кандидатов. Кандидаты также обязаны сообщать Полицейскому управлению Лос-Сантоса о любых судимостях или контактах с Управлением. Невыполнение этого требования повлечёт немедленный отказ в рассмотрении заявления и возможные ограничения на подачу последующих заявлений."],
+["r","6.1","Отметьте один из следующих вариантов, который лучше всего вам подходит, исходя из тяжести:",O("У меня чистая судимость.|Я получал(-а) штрафы / предупреждения о нарушениях от правоохранительных органов Сан-Андреас, которые оплатил(-а) или которые были подтверждены в суде.|Я был(-а) арестован(-а) правоохранительными органами Сан-Андреас по обвинениям в проступках (Misdemeanour), по которым признал(-а) вину / не оспаривал(-а) обвинение или которые были подтверждены в суде.|Я был(-а) арестован(-а) правоохранительными органами Сан-Андреас по обвинениям в тяжких преступлениях (Felony), по которым признал(-а) вину / не оспаривал(-а) обвинение или которые были подтверждены в суде.")]]},
+{h:"7. ЛИЧНОЕ ЭССЕ",i:[
+["a","7.1","Почему вы хотите построить карьеру в правоохранительных органах? Кроме того, почему вы подходящий кандидат на эту должность? (максимум 350 слов)"]]},
+{h:"8. РАЗРЕШЕНИЕ И ОТКАЗ ОТ ПРЕТЕНЗИЙ",i:[
+["p","","Подав заявление о приёме на работу в Город Лос-Сантос, я настоящим уполномочиваю на срок один год с даты подписания любого уполномоченного представителя Города, предъявившего это разрешение или его копию, получать любую информацию, касающуюся моей трудовой деятельности, кредитной истории, образования, места жительства, академической успеваемости, личных данных, результатов работы, проверок биографии, полиграфических исследований, любых внутренних расследований и дисциплинарных записей, включая любые файлы, признанные конфиденциальными и/или закрытыми. Я также разрешаю раскрытие любых записей уголовной юстиции об арестах, штрафах, задержаниях, испытательном сроке и условно-досрочном освобождении, а также полицейских отчётов. Настоящим я поручаю вам раскрывать эту информацию по требованию предъявителя. Я также разрешаю Городу делать фотокопии этих записей. Это разрешение подписывается при полном знании и понимании того, что информация предназначена для официального использования Городом Лос-Сантос. Настоящим я даю согласие на передачу Городом вышеописанной информации третьим лицам, включая, помимо прочего, соответствующие правоохранительные органы или власти, в ходе исполнения ими своих служебных обязанностей. Настоящим я признаю и соглашаюсь с тем, что отказываюсь от любого права или возможности читать или просматривать любую информацию, предоставленную в ответ на данную проверку. Я также отказываюсь от любого права или возможности читать или просматривать любой отчёт о проверке биографии, подготовленный Городом. Я также признаю и соглашаюсь с тем, что если я буду искать работу в другом правоохранительном органе (в пределах Города или за его пределами), материалы моей проверки биографии будут раскрыты этому органу исключительно для определения моей пригодности к службе в качестве офицера полиции. Я также признаю и соглашаюсь с тем, что если материалы моей проверки будут раскрыты потенциальному работодателю исключительно для такой ограниченной цели, они останутся конфиденциальными и не станут частью моего личного дела. Я также соглашаюсь, что в случае передачи этих материалов другому органу в соответствии с настоящим пунктом я отказываюсь от любого права на ознакомление с такими материалами (или любыми их резюме), находящимися у этого органа, независимо от того, как этот орган обращается с такими документами внутри себя. Настоящим я освобождаю вас, как моего работодателя, бывшего работодателя, потенциального работодателя или их представителя, а также любой полицейский орган, школу, колледж, университет или иное образовательное учреждение, кредитное бюро, кредитную организацию, агентство потребительской отчётности или торговое предприятие, включая любых их должностных лиц, сотрудников или связанный с ними персонал, как индивидуально, так и коллективно, от любой ответственности за ущерб любого рода, который может когда-либо возникнуть у меня, моих наследников или правопреемников вследствие выполнения настоящего разрешения и просьбы о раскрытии информации либо любой попытки его выполнить."],
+["p","","Я подтверждаю, что ответы, содержащиеся в данной Анкете кандидата, являются правдивыми и полными, насколько мне известно. Соглашаясь ниже, я настоящим разрешаю проверку всех утверждений, содержащихся в данной заявке на трудоустройство, в той мере, в какой это необходимо для принятия решения о приёме на работу. Я настоящим понимаю и признаю, что, если иное не определено применимым законодательством, любые трудовые отношения с данной организацией носят характер «at will» (по усмотрению сторон), что означает, что Сотрудник может уволиться в любое время, а Работодатель может исключить Сотрудника из процесса набора в любое время с указанием причины или без неё. Также понимается, что эти трудовые отношения «at will» не могут быть изменены никаким письменным документом или действиями, если только такое изменение не подтверждено в письменной форме уполномоченным руководителем данной организации. В случае трудоустройства я понимаю, что любая ложная или вводящая в заблуждение информация в моём заявлении может повлечь отказ и запрет на повторную подачу. Я также понимаю, что обязан(-а) соблюдать все правила и положения работодателя."],
+["t","8.1","Полное имя (подпись)"],["t","8.2","Полное имя (печатными буквами)"],["t","8.3","Дата","","14/АВГ/2026"]]},
+{h:"9. (( OUT OF CHARACTER ))",i:[
+["t","9.1","Имя / никнейм"],["t","9.1.2","Discord ID"],["r","9.2","Пол:",O(GD)],["t","9.3","Возраст"],
+["t","9.4","Время игры на Gambit"],["t","9.5","Время игры на SAMP"],
+["a","9.6","Перечислите ВСЕХ текущих и прошлых персонажей:","","(Текущий) Имя Фамилия"],
+["a","9.7","Перечислите ВСЕ прошлые официальные/неофициальные членства во фракциях с последним рангом и причиной, по которой вы ушли или были уволены:",ND],
+["t","9.8","Если вы ранее состояли в LSPD, укажите дату увольнения или отставки",ND],
+["t","9.9","Если вы ранее состояли в LSPD, приложите ссылку на ваш Запрос на восстановление, по которому вам разрешили пройти набор",ND],
+["a","9.10","Проходили ли вы ранее процесс набора во фракцию Полицейского управления Лос-Сантоса? Если да, то под каким персонажем и в каком месяце и году?:",ND],
+["r","9.11.1","Состоите ли вы в данный момент в официальной ИЛИ неофициальной фракции с другого аккаунта?",O(YN)],
+["a","9.11.2","Если на 9.11.1 вы ответили «Да», укажите, в каких фракциях:",ND],
+["t","9.11.3","Если на 9.11.1 вы ответили «Да», приложите скриншот одобрения двойной фракции от вашего руководства",ND],
+["t","9.12","Имя на форуме Gambit"],["t","9.13","Ссылка на профиль на форуме Gambit","","Ссылка (в BBCode станет ACCESS)"],
+["t","9.14","Скриншот двухфакторной аутентификации","","Ссылка (в BBCode станет ACCESS)"],
+["a","9.15","Скриншот панели всех персонажей в личном кабинете GAMBIT-RP.COM","","Имя персонажа - ссылка, по одному в строке"],
+["r","9.16","Есть ли у вас рабочий микрофон?",O(YN)],
+["a","9.17","Какова предыстория вашего персонажа? Включите детство, прошлые места работы, мотивацию и т.д. (максимум 600 слов):"],
+["g","9.18","Образец отпечатков пальцев",()=>`* ${nm()} предоставляет отпечатки всех пальцев в Административном здании полиции ${dt()}.`],
+["g","9.19.1","Тест на наркотики",()=>`* ${nm()} прибывает в Административное здание LSPD ${dt()} для сдачи теста на наркотики.`]]},
+{h:"10. (( РАЗРЕШЕНИЕ И ОТКАЗ ОТ ПРЕТЕНЗИЙ ))",i:[
+["p","","Подавая эту Анкету кандидата, я подтверждаю, что мне не было запрещено подавать заявление в LSPD и что я нахожусь в хорошем положении в LSPD. Я понимаю и принимаю тот факт, что если будет доказан какой-либо OOC-обман в моём поданном заявлении, я несу ответственность и понесу административное наказание за OOC-обман в официальном заявлении. Настоящим я заявляю, что ничто в данной анкете не является ложным или обманным и всё вышеизложенное в данной анкете на 100% точно и честно. Я беру на себя полную ответственность за любое нарушение политики набора."],
+["p","","Я понимаю, что LSPD и его подчинённые (сотрудники по набору и трудоустройству) имеют полное право OOC отклонить моё заявление или запретить мне подавать заявления по любой причине, без объяснения причин или обоснования. Я также соглашаюсь, что любая попытка перейти в другой правоохранительный или государственный орган должна быть согласована с лидером фракции LSPD до того, как это произойдёт. Я понимаю, что данное заявление носит характер отношений «at will» и обязуюсь соблюдать все правила набора."],
+["t","","Подпись"]]}
+];
+
+/* ---------- РЕНДЕР ФОРМЫ ---------- */
+const byN={};
+const pages=document.getElementById("pages");
+S.forEach((s,si)=>{
+    let h=`<section class="step-page" data-page="${si+1}" hidden><div class="section-card"><div class="section-header"><small>Раздел ${String(si+1).padStart(2,"0")}</small><h2>${s.h}</h2></div><div class="section-body">`;
+    s.i.forEach((it,ii)=>{
+        const [t,n,l,x,ph]=it,k=it.k=si+"_"+ii,lab=((n+" "+l).trim()||ph||"");
+        if(n)byN[n]=it;
+        if(t=="p")h+=`<p class="txt">${l}</p>`;
+        else if(t=="h")h+=`<h3>${n} ${l}</h3>`;
+        else if(t=="g")h+=`<p class="txt"><i>${n} ${l}: формируется автоматически из имени (1.1–1.2) и даты (8.3).</i></p>`;
+        else if(t=="r"||t=="c")h+=`<div class="field"><label>${lab}</label><div class="opts">`+x.map(o=>`<label class="answer"><input type="${t=="r"?"radio":"checkbox"}" name="${k}" value="${o}"><span>${o}</span></label>`).join("")+`</div></div>`;
+        else{
+            const req=t!="i"?" required":"",ctl=t=="a"?`<textarea data-k="${k}" placeholder="${ph||""}">${x||""}</textarea>`:`<input data-k="${k}" value="${x||""}" placeholder="${ph||""}">`;
+            h+=`<div class="field${req}"><label>${lab}</label>${ctl}<div class="field-error">Поле обязательно.</div></div>`;
+        }
+    });
+    pages.insertAdjacentHTML("beforeend",h+`</div></div></section>`);
+});
+
+/* ---------- УТИЛИТЫ ---------- */
+const gv=k=>{const e=document.querySelector(`[data-k="${k}"]`);return e?e.value.trim():""};
+const nm=()=>gv(byN["1.2"].k)+" "+gv(byN["1.1"].k);
+const dt=()=>gv(byN["8.3"].k);
+const esc=t=>String(t||"").replace(/\[/g,"(").replace(/\]/g,")");
+const link=t=>t.replace(/(https?:\/\/\S+)/g,"[url=$1]ACCESS[/url]");
+const NB="\u00A0".repeat(12),ON="[color=#2f8fdd]☑[/color]",OFF="[color=#bfc6cd]☐[/color]";
+const LOGO_URL="https://i.imgur.com/tJxXQFt.png";
+
+function heading(text){
+    return "[block=black][indent][font=Arial Black][color=white]"+text+"[/color][/font][/indent][/block][bg=white]\n[size=3][indent][font=Arial][color=black]";
+}
+/* срезает хвостовые пустые строки; между блоками переводов строк нет */
+function closeSection(text){
+    return String(text).replace(/\s+$/,"")+"\n[/color][/font][/indent][/size]\n[/bg]";
+}
+
+/* ---------- ГЕНЕРАЦИЯ BBCODE ---------- */
+function gen(){
+    document.getElementById("topicTitle").value="[POI] "+(nm().trim()||"Имя Фамилия");
+    let b="[box=white][color=black][indent]\n";
+    b+="[center][img width=\"130px\" height=\"130px\"]"+LOGO_URL+"[/img][/center]\n\n";
+    b+="[center][font=Arial Black][size=5][b]LOS SANTOS POLICE DEPARTMENT[/b][/size][/font]\n";
+    b+="[size=4]PRELIMINARY BACKGROUND APPLICATION[/size][/center]\n[/indent][/color][/box]";
+    S.forEach(s=>{
+        let o="";
+        s.i.forEach(it=>{
+            const [t,n,l,x]=it,k=it.k,N=n?"[B]"+n+"[/B] ":"";
+            if(t=="p")o+=esc(l)+"\n\n";
+            else if(t=="h")o+=(o?"\n":"")+N+esc(l)+"\n";
+            else if(t=="r"||t=="c"){
+                const sel=[...document.querySelectorAll(`input[name="${k}"]:checked`)].map(e=>e.value);
+                o+=N+esc(l)+"\n";
+                x.forEach(op=>o+=NB+(sel.includes(op)?ON:OFF)+" "+esc(op)+"\n");
+                o+="\n";
+            }else if(t=="i"){
+                const v=gv(k);
+                o+=N+esc(l)+"\n"+(v?"[img]"+v+"[/img]\n":"");
+            }else{
+                const v=t=="g"?"[color=#C2A2DA]"+esc(x())+"[/color]":link(esc(gv(k)));
+                if(!l)o+=v+"\n";
+                else o+=N+esc(l)+(v.includes("\n")?":\n":": ")+v+"\n";
+            }
+        });
+        b+=heading(s.h)+o;
+        b=closeSection(b);
+    });
+    document.getElementById("bbcode").value=b;
+}
+
+/* ---------- ШАГИ ---------- */
+let cur=1;const T=S.length+1;
+
+function val(step){
+    let ok=true;
+    const p=document.querySelector(`.step-page[data-page="${step}"]`);
+    if(!p)return true;
+    p.querySelectorAll(".field.required").forEach(f=>{
+        const bad=!f.querySelector("input,textarea").value.trim();
+        f.classList.toggle("error",bad);
+        if(bad)ok=false;
+    });
+    if(!ok)toast("Заполните все обязательные поля");
+    return ok;
+}
+function valAll(){
+    for(let s=1;s<T;s++)if(!val(s)){show(s);return false}
+    return true;
+}
+function show(s){
+    cur=s;
+    document.querySelectorAll(".step-page").forEach(p=>p.hidden=Number(p.dataset.page)!==s);
+    document.getElementById("pageDescription").textContent="Preliminary Background Application — страница "+s+" из "+T;
+    document.getElementById("backBtn").style.visibility=s==1?"hidden":"visible";
+    document.getElementById("nextBtn").textContent=s==T-1?"Сгенерировать BBCode":s==T?"Обновить BBCode":"Далее →";
+    if(s==T)gen();
+    window.scrollTo({top:0,behavior:"smooth"});
+}
+function nextStep(){
+    if(cur>=T-1){
+        if(!valAll())return;
+        gen();
+        if(cur==T-1)show(T);
+        toast(cur==T?"BBCode обновлён":"BBCode успешно сгенерирован");
+        return;
+    }
+    if(val(cur))show(cur+1);
+}
+function previousStep(){if(cur>1)show(cur-1)}
+
+document.addEventListener("input",e=>{
+    const f=e.target.closest(".field");
+    if(f&&e.target.value.trim())f.classList.remove("error");
+});
+
+/* ---------- КОПИРОВАНИЕ / СБРОС ---------- */
+async function copyEl(id,msg){
+    const el=document.getElementById(id);
+    try{await navigator.clipboard.writeText(el.value)}catch{el.select();document.execCommand("copy")}
+    toast(msg);
+}
+const copyBBCode=()=>copyEl("bbcode","BBCode скопирован");
+const copyTopicTitle=()=>copyEl("topicTitle","Заголовок скопирован");
+function resetForm(){
+    if(confirm("Очистить всю анкету?"))location.replace(location.href);
+}
+
+let toastTimer;
+function toast(m){
+    const el=document.getElementById("toast");
+    el.textContent=m;el.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer=setTimeout(()=>el.classList.remove("show"),1800);
+}
+
+show(1);
+
+</script>
+
+</body>
+</html>
