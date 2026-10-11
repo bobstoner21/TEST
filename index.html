@@ -655,7 +655,7 @@ S.forEach((s,si)=>{
         if(t=="p")h+=`<p class="txt">${l}</p>`;
         else if(t=="h")h+=`<h3>${n} ${l}</h3>`;
         else if(t=="g")h+=`<p class="txt"><i>${n} ${l}: формируется автоматически из имени (1.1–1.2) и даты (8.3).</i></p>`;
-        else if(t=="m")h+=`<div class="field sigbox"><label>${l}</label><canvas id="sig" width="640" height="190"></canvas><div class="sigbar"><select id="sigfont" onchange="sigDraw()"><option>Mrs Saint Delafield</option><option>Herr Von Muellerhoff</option><option>Marck Script</option></select></div></div>`;
+        else if(t=="m")h+=`<div class="field sigbox"><label>${l}</label><canvas id="sig" width="640" height="190"></canvas><div class="sigbar"><select id="sigfont" onchange="sigDraw()"><option>Mrs Saint Delafield</option><option>Herr Von Muellerhoff</option><option>Marck Script</option></select><button type="button" class="btn" onclick="sigUpload()">Загрузить подпись</button></div><div class="txt" id="sigstatus"></div></div>`;
         else if(t=="r"||t=="c")h+=`<div class="field${t=="r"&&!["2.2.1","2.3"].includes(n)?" required":""}"><label>${lab}</label><div class="opts">`+x.map(o=>`<label class="answer"><input type="${t=="r"?"radio":"checkbox"}" name="${k}" value="${o}"><span>${o}</span></label>`).join("")+`</div><div class="field-error">Выберите вариант.</div></div>`;
         else{
             const req=t!="i"?" required":"",ctl=t=="a"?`<textarea data-k="${k}" placeholder="${ph||""}">${x||""}</textarea>`:`<input data-k="${k}" value="${x||""}" placeholder="${ph||""}">`;
@@ -719,7 +719,6 @@ function gen(){
         b=closeSection(b);
     });
     document.getElementById("bbcode").value=b;
-    sigUpload();
 }
 
 /* ---------- ШАГИ ---------- */
@@ -751,12 +750,14 @@ function show(s){
     sigDraw();
     window.scrollTo({top:0,behavior:"smooth"});
 }
-function nextStep(){
+async function nextStep(){
     if(cur>=T-1){
         if(!valAll())return;
+        toast("Генерирую BBCode…");
+        await sigUpload();
         gen();
         if(cur==T-1)show(T);
-        toast(cur==T?"BBCode обновлён":"BBCode успешно сгенерирован");
+        toast(sigUrl()?"BBCode готов, подпись добавлена":"BBCode готов, но подпись не загрузилась — см. статус в разделе 8");
         return;
     }
     if(val(cur))show(cur+1);
@@ -791,24 +792,34 @@ function toast(m){
 /* ---------- АВТОЗАГРУЗКА ПОДПИСИ НА IMGBB ----------
    Ключ: api.imgbb.com -> войти -> "Get API key" -> скопировать сюда. */
 const IMGBB_API_KEY="11f352cb221456fa0d5b3c1c58eb897c";
-let sigCache={key:"",url:""};
+let sigCache={key:"",url:""},sigBusy=null;
 const sigKey=()=>nm().trim()+"|"+(document.getElementById("sigfont")||{}).value;
 const sigUrl=()=>sigCache.key==sigKey()?sigCache.url:"";
-async function sigUpload(){
-    const c=document.getElementById("sig");
-    if(!c||!nm().trim()||sigUrl())return;
-    if(!IMGBB_API_KEY){toast("Подпись не загружена: впиши IMGBB_API_KEY в код");return}
-    const key=sigKey();
-    try{
-        const fd=new FormData();
-        fd.append("image",c.toDataURL("image/png").split(",")[1]);
-        const r=await fetch("https://api.imgbb.com/1/upload?key="+IMGBB_API_KEY,{method:"POST",body:fd});
-        const j=await r.json();
-        if(!j.success)throw 0;
-        sigCache={key,url:j.data.url};
-        gen();
-        toast("Подпись загружена и добавлена в BBCode");
-    }catch(e){toast("Не удалось загрузить подпись")}
+function sigStatus(m,err){
+    const e=document.getElementById("sigstatus");
+    if(e){e.textContent="Статус подписи: "+m;e.style.color=err?"#b00020":"#111"}
+}
+function sigUpload(){
+    if(sigBusy)return sigBusy;
+    if(!nm().trim()){sigStatus("сначала впиши имя и фамилию (1.1–1.2)",1);return Promise.resolve()}
+    if(sigUrl()){sigStatus("загружена ✓");return Promise.resolve()}
+    if(!IMGBB_API_KEY){sigStatus("не задан IMGBB_API_KEY в коде",1);return Promise.resolve()}
+    sigBusy=(async()=>{
+        sigStatus("загружаю…");
+        try{
+            await sigDraw();
+            const key=sigKey(),fd=new FormData();
+            fd.append("image",document.getElementById("sig").toDataURL("image/png").split(",")[1]);
+            const r=await fetch("https://api.imgbb.com/1/upload?key="+IMGBB_API_KEY,{method:"POST",body:fd});
+            const j=await r.json().catch(()=>({}));
+            if(!r.ok||!j.success)throw new Error((j.error&&j.error.message)||("HTTP "+r.status));
+            sigCache={key,url:j.data.url};
+            sigStatus("загружена ✓");
+        }catch(e){
+            sigStatus("не удалось загрузить — "+(e.message&&e.message!="Failed to fetch"?e.message:"нет связи с imgbb или блокировка браузера"),1);
+        }finally{sigBusy=null}
+    })();
+    return sigBusy;
 }
 
 /* ---------- СНЯТИЕ ВЫБОРА У РАДИО (повторный клик) ---------- */
@@ -822,20 +833,22 @@ document.addEventListener("click",e=>{
 },true);
 
 /* ---------- ПОДПИСЬ ИЗ ИМЕНИ И ФАМИЛИИ ---------- */
-function sigDraw(){
+function sigPaint(){
     const c=document.getElementById("sig");
     if(!c)return;
-    const f=document.getElementById("sigfont").value;
-    document.fonts.load('48px "'+f+'"').then(()=>{
-        const x=c.getContext("2d"),t=nm().trim();
-        x.clearRect(0,0,c.width,c.height);
-        if(!t)return;
-        let z=130;
-        x.font=z+'px "'+f+'", cursive';
-        while(x.measureText(t).width>c.width-40&&z>24){z-=4;x.font=z+'px "'+f+'", cursive'}
-        x.fillStyle="#000";x.textAlign="center";x.textBaseline="middle";
-        x.fillText(t,c.width/2,c.height/2);
-    });
+    const f=document.getElementById("sigfont").value,x=c.getContext("2d"),t=nm().trim();
+    x.clearRect(0,0,c.width,c.height);
+    if(!t)return;
+    let z=130;
+    x.font=z+'px "'+f+'", cursive';
+    while(x.measureText(t).width>c.width-40&&z>24){z-=4;x.font=z+'px "'+f+'", cursive'}
+    x.fillStyle="#000";x.textAlign="center";x.textBaseline="middle";
+    x.fillText(t,c.width/2,c.height/2);
+}
+function sigDraw(){
+    const f=document.getElementById("sigfont");
+    if(!f)return Promise.resolve();
+    return document.fonts.load('48px "'+f.value+'"').catch(()=>{}).then(sigPaint);
 }
 function sigDl(){
     const c=document.getElementById("sig");
