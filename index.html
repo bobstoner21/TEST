@@ -308,9 +308,9 @@ body { background: #fff; }
 }
 
 /* ===== масштаб крупнее ===== */
-.container { zoom: 1.2; }
+.container { zoom: 1.08; }
 
-@media (max-width: 1100px) { .container { zoom: 1.1; } }
+@media (max-width: 1100px) { .container { zoom: 1; } }
 @media (max-width: 850px)  { .container { zoom: 1; } }
 
 .main { padding-top: 20px; padding-bottom: 30px; }
@@ -344,7 +344,10 @@ body { background: #fff; }
 .field{margin:0 0 14px}.txt{white-space:pre-line;font-size:12px;line-height:1.5;margin:0 0 14px}
 .opts{display:flex;flex-wrap:wrap;gap:6px 22px;margin-top:4px}
 .field .opts label{display:flex;margin:0;font-size:13px;text-transform:none;letter-spacing:0;color:var(--text)}
+.sigbox canvas{display:block;width:100%;max-width:420px;height:auto;border-bottom:1px solid #000;margin:4px 0 8px}
+.sigbar{display:flex;gap:8px;margin:0 0 12px}.sigbar select{font:inherit;padding:6px 8px;border:1px solid #000;background:#fff}
 </style>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Mrs+Saint+Delafield&family=Herr+Von+Muellerhoff&family=Marck+Script&display=swap" rel="stylesheet">
 </head>
 
 <body>
@@ -616,7 +619,7 @@ const S=[
 {h:"8. РАЗРЕШЕНИЕ И ОТКАЗ ОТ ПРЕТЕНЗИЙ",i:[
 ["p","","Подав заявление о приёме на работу в Город Лос-Сантос, я настоящим уполномочиваю на срок один год с даты подписания любого уполномоченного представителя Города, предъявившего это разрешение или его копию, получать любую информацию, касающуюся моей трудовой деятельности, кредитной истории, образования, места жительства, академической успеваемости, личных данных, результатов работы, проверок биографии, полиграфических исследований, любых внутренних расследований и дисциплинарных записей, включая любые файлы, признанные конфиденциальными и/или закрытыми. Я также разрешаю раскрытие любых записей уголовной юстиции об арестах, штрафах, задержаниях, испытательном сроке и условно-досрочном освобождении, а также полицейских отчётов. Настоящим я поручаю вам раскрывать эту информацию по требованию предъявителя. Я также разрешаю Городу делать фотокопии этих записей. Это разрешение подписывается при полном знании и понимании того, что информация предназначена для официального использования Городом Лос-Сантос. Настоящим я даю согласие на передачу Городом вышеописанной информации третьим лицам, включая, помимо прочего, соответствующие правоохранительные органы или власти, в ходе исполнения ими своих служебных обязанностей. Настоящим я признаю и соглашаюсь с тем, что отказываюсь от любого права или возможности читать или просматривать любую информацию, предоставленную в ответ на данную проверку. Я также отказываюсь от любого права или возможности читать или просматривать любой отчёт о проверке биографии, подготовленный Городом. Я также признаю и соглашаюсь с тем, что если я буду искать работу в другом правоохранительном органе (в пределах Города или за его пределами), материалы моей проверки биографии будут раскрыты этому органу исключительно для определения моей пригодности к службе в качестве офицера полиции. Я также признаю и соглашаюсь с тем, что если материалы моей проверки будут раскрыты потенциальному работодателю исключительно для такой ограниченной цели, они останутся конфиденциальными и не станут частью моего личного дела. Я также соглашаюсь, что в случае передачи этих материалов другому органу в соответствии с настоящим пунктом я отказываюсь от любого права на ознакомление с такими материалами (или любыми их резюме), находящимися у этого органа, независимо от того, как этот орган обращается с такими документами внутри себя. Настоящим я освобождаю вас, как моего работодателя, бывшего работодателя, потенциального работодателя или их представителя, а также любой полицейский орган, школу, колледж, университет или иное образовательное учреждение, кредитное бюро, кредитную организацию, агентство потребительской отчётности или торговое предприятие, включая любых их должностных лиц, сотрудников или связанный с ними персонал, как индивидуально, так и коллективно, от любой ответственности за ущерб любого рода, который может когда-либо возникнуть у меня, моих наследников или правопреемников вследствие выполнения настоящего разрешения и просьбы о раскрытии информации либо любой попытки его выполнить."],
 ["p","","Я подтверждаю, что ответы, содержащиеся в данной Анкете кандидата, являются правдивыми и полными, насколько мне известно. Соглашаясь ниже, я настоящим разрешаю проверку всех утверждений, содержащихся в данной заявке на трудоустройство, в той мере, в какой это необходимо для принятия решения о приёме на работу. Я настоящим понимаю и признаю, что, если иное не определено применимым законодательством, любые трудовые отношения с данной организацией носят характер «at will» (по усмотрению сторон), что означает, что Сотрудник может уволиться в любое время, а Работодатель может исключить Сотрудника из процесса набора в любое время с указанием причины или без неё. Также понимается, что эти трудовые отношения «at will» не могут быть изменены никаким письменным документом или действиями, если только такое изменение не подтверждено в письменной форме уполномоченным руководителем данной организации. В случае трудоустройства я понимаю, что любая ложная или вводящая в заблуждение информация в моём заявлении может повлечь отказ и запрет на повторную подачу. Я также понимаю, что обязан(-а) соблюдать все правила и положения работодателя."],
-["t","8.1","Полное имя (подпись)"],["t","8.2","Полное имя (печатными буквами)"],["t","8.3","Дата","","14/АВГ/2026"]]},
+["t","8.1","Полное имя (подпись)"],["m","","Подпись: рисуется из имени и фамилии, при генерации BBCode сама загружается на imgur и вставляется картинкой в 8.1"],["t","8.2","Полное имя (печатными буквами)"],["t","8.3","Дата","","14/АВГ/2026"]]},
 {h:"9. (( OUT OF CHARACTER ))",i:[
 ["t","9.1","Имя / никнейм"],["t","9.1.2","Discord ID"],["r","9.2","Пол:",O(GD)],["t","9.3","Возраст"],
 ["t","9.4","Время игры на Gambit"],["t","9.5","Время игры в SAMP"],
@@ -652,7 +655,8 @@ S.forEach((s,si)=>{
         if(t=="p")h+=`<p class="txt">${l}</p>`;
         else if(t=="h")h+=`<h3>${n} ${l}</h3>`;
         else if(t=="g")h+=`<p class="txt"><i>${n} ${l}: формируется автоматически из имени (1.1–1.2) и даты (8.3).</i></p>`;
-        else if(t=="r"||t=="c")h+=`<div class="field"><label>${lab}</label><div class="opts">`+x.map(o=>`<label class="answer"><input type="${t=="r"?"radio":"checkbox"}" name="${k}" value="${o}"><span>${o}</span></label>`).join("")+`</div></div>`;
+        else if(t=="m")h+=`<div class="field sigbox"><label>${l}</label><canvas id="sig" width="640" height="190"></canvas><div class="sigbar"><select id="sigfont" onchange="sigDraw()"><option>Mrs Saint Delafield</option><option>Herr Von Muellerhoff</option><option>Marck Script</option></select></div></div>`;
+        else if(t=="r"||t=="c")h+=`<div class="field${t=="r"&&!["2.2.1","2.3"].includes(n)?" required":""}"><label>${lab}</label><div class="opts">`+x.map(o=>`<label class="answer"><input type="${t=="r"?"radio":"checkbox"}" name="${k}" value="${o}"><span>${o}</span></label>`).join("")+`</div><div class="field-error">Выберите вариант.</div></div>`;
         else{
             const req=t!="i"?" required":"",ctl=t=="a"?`<textarea data-k="${k}" placeholder="${ph||""}">${x||""}</textarea>`:`<input data-k="${k}" value="${x||""}" placeholder="${ph||""}">`;
             h+=`<div class="field${req}"><label>${lab}</label>${ctl}<div class="field-error">Поле обязательно.</div></div>`;
@@ -668,10 +672,12 @@ const dt=()=>gv(byN["8.3"].k);
 const esc=t=>String(t||"").replace(/\[/g,"(").replace(/\]/g,")");
 const link=t=>t.replace(/(https?:\/\/\S+)/g,"[url=$1]ACCESS[/url]");
 const NB="\u00A0".repeat(12),ON="[color=#2f8fdd]☑[/color]",OFF="[color=#bfc6cd]☐[/color]";
+/* размер текста на форуме: 3 (мельче) или 4 (крупнее); можно попробовать и "14px" — проверь в превью форума */
+const BODY_SIZE="3";
 const LOGO_URL="https://i.imgur.com/tJxXQFt.png";
 
 function heading(text){
-    return "[block=black][indent][font=Arial Black][color=white]"+text+"[/color][/font][/indent][/block][bg=white]\n[size=3][indent][font=Arial][color=black]";
+    return "[block=black][indent][font=Arial Black][color=white]"+text+"[/color][/font][/indent][/block][bg=white]\n[size="+BODY_SIZE+"][indent][font=Arial][color=black]";
 }
 /* срезает хвостовые пустые строки; между блоками переводов строк нет */
 function closeSection(text){
@@ -696,11 +702,14 @@ function gen(){
                 o+=N+esc(l)+"\n";
                 x.forEach(op=>o+=NB+(sel.includes(op)?ON:OFF)+" "+esc(op)+"\n");
                 o+="\n";
+            }else if(t=="m"){
+                const v=gv(k);if(v)o+="[img]"+v+"[/img]\n";
             }else if(t=="i"){
                 const v=gv(k);
                 o+=N+esc(l)+"\n"+(v?"[img]"+v+"[/img]\n":"");
             }else{
-                const v=t=="g"?"[color=#C2A2DA]"+esc(x())+"[/color]":link(esc(gv(k)));
+                let v=t=="g"?"[color=#C2A2DA]"+esc(x())+"[/color]":link(esc(gv(k)));
+                if((n=="8.1"||l=="Подпись")&&v){const u=sigUrl();if(u)v="[img width=\"260px\"]"+u+"[/img]";}
                 if(!l)o+=v+"\n";
                 else o+=N+esc(l)+(v.includes("\n")?":\n":": ")+v+"\n";
             }
@@ -709,6 +718,7 @@ function gen(){
         b=closeSection(b);
     });
     document.getElementById("bbcode").value=b;
+    sigUpload();
 }
 
 /* ---------- ШАГИ ---------- */
@@ -719,7 +729,7 @@ function val(step){
     const p=document.querySelector(`.step-page[data-page="${step}"]`);
     if(!p)return true;
     p.querySelectorAll(".field.required").forEach(f=>{
-        const bad=!f.querySelector("input,textarea").value.trim();
+        const bad=f.querySelector(".opts")?!f.querySelector("input:checked"):!f.querySelector("input,textarea").value.trim();
         f.classList.toggle("error",bad);
         if(bad)ok=false;
     });
@@ -737,6 +747,7 @@ function show(s){
     document.getElementById("backBtn").style.visibility=s==1?"hidden":"visible";
     document.getElementById("nextBtn").textContent=s==T-1?"Сгенерировать BBCode":s==T?"Обновить BBCode":"Далее →";
     if(s==T)gen();
+    sigDraw();
     window.scrollTo({top:0,behavior:"smooth"});
 }
 function nextStep(){
@@ -775,6 +786,72 @@ function toast(m){
     clearTimeout(toastTimer);
     toastTimer=setTimeout(()=>el.classList.remove("show"),1800);
 }
+
+/* ---------- АВТОЗАГРУЗКА ПОДПИСИ НА IMGUR ----------
+   Client ID: api.imgur.com/oauth2/addclient -> тип "Anonymous usage without user authorization",
+   Callback URL любой (например https://localhost) -> скопируй Client ID сюда. */
+const IMGUR_CLIENT_ID="";
+let sigCache={key:"",url:""};
+const sigKey=()=>nm().trim()+"|"+(document.getElementById("sigfont")||{}).value;
+const sigUrl=()=>sigCache.key==sigKey()?sigCache.url:"";
+async function sigUpload(){
+    const c=document.getElementById("sig");
+    if(!c||!nm().trim()||sigUrl())return;
+    if(!IMGUR_CLIENT_ID){toast("Подпись не загружена: впиши IMGUR_CLIENT_ID в код");return}
+    const key=sigKey();
+    try{
+        const fd=new FormData();
+        fd.append("image",c.toDataURL("image/png").split(",")[1]);
+        fd.append("type","base64");
+        const r=await fetch("https://api.imgur.com/3/image",{method:"POST",headers:{Authorization:"Client-ID "+IMGUR_CLIENT_ID},body:fd});
+        const j=await r.json();
+        if(!j.success)throw 0;
+        sigCache={key,url:j.data.link};
+        gen();
+        toast("Подпись загружена и добавлена в BBCode");
+    }catch(e){toast("Не удалось загрузить подпись на imgur")}
+}
+
+/* ---------- СНЯТИЕ ВЫБОРА У РАДИО (повторный клик) ---------- */
+document.addEventListener("click",e=>{
+    const l=e.target.closest(".opts label.answer");
+    if(!l)return;
+    const i=l.querySelector("input");
+    if(i.type!="radio")return;
+    if(e.target===i){if(l._w)i.checked=false;l._w=0}
+    else l._w=i.checked;
+},true);
+
+/* ---------- ПОДПИСЬ ИЗ ИМЕНИ И ФАМИЛИИ ---------- */
+function sigDraw(){
+    const c=document.getElementById("sig");
+    if(!c)return;
+    const f=document.getElementById("sigfont").value;
+    document.fonts.load('48px "'+f+'"').then(()=>{
+        const x=c.getContext("2d"),t=nm().trim();
+        x.clearRect(0,0,c.width,c.height);
+        if(!t)return;
+        let z=130;
+        x.font=z+'px "'+f+'", cursive';
+        while(x.measureText(t).width>c.width-40&&z>24){z-=4;x.font=z+'px "'+f+'", cursive'}
+        x.fillStyle="#000";x.textAlign="center";x.textBaseline="middle";
+        x.fillText(t,c.width/2,c.height/2);
+    });
+}
+function sigDl(){
+    const c=document.getElementById("sig");
+    c.toBlob(b=>{const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="signature.png";a.click()});
+}
+document.addEventListener("input",e=>{
+    const k=e.target.dataset&&e.target.dataset.k;
+    if(!k)return;
+    const a=byN["8.1"],b=byN["8.2"],z=S[S.length-1].i.slice(-1)[0];
+    if(k==a.k||k==b.k||k==z.k)e.target.dataset.t=1;
+    if(k==byN["1.1"].k||k==byN["1.2"].k){
+        [a,b,z].forEach(it=>{const el=document.querySelector(`[data-k="${it.k}"]`);if(!el.dataset.t)el.value=nm().trim()});
+        sigDraw();
+    }
+});
 
 show(1);
 
